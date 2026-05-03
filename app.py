@@ -1,151 +1,346 @@
-import pandas as pd
+"""
+╔══════════════════════════════════════════════════════════════════╗
+║         ESTRUTURA 1 · app.py — Script Principal                 ║
+║         Técnica: CSS Injection + HTML Render via Streamlit      ║
+║         Imagem: convertida para Base64 pela Estrutura 2         ║
+╚══════════════════════════════════════════════════════════════════╝
+"""
+
 import streamlit as st
 
-# --- Config ---
+# ── Estrutura 2: importa o conversor IMG → Base64 ────────────────
+from img_to_base64 import img_to_base64, get_mime_type
+
+# ── Page config ───────────────────────────────────────────────────
 st.set_page_config(
-    page_title="S&P 500 Search",
-    page_icon="📈",
-    layout="wide"
+    page_title="Venom · Imagem em Movimento",
+    page_icon="🩸",
+    layout="centered",
+    initial_sidebar_state="collapsed",
 )
 
-# --- CSS dark theme ---
-st.markdown("""
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  CONVERSÃO IMG → BASE64 (Estrutura 2 em ação)
+#
+#  img_to_base64("logo.png") :
+#    1. Lê os bytes binários da imagem
+#    2. Codifica em Base64 (RFC 4648)
+#    3. Retorna string pronta para o atributo src do <img>
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+logo_b64 = img_to_base64("logo.png")
+logo_mime = get_mime_type("logo.png")   # → "image/png"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  ESTRUTURA 1 · CSS INJECTION
+#  Injetado via st.markdown(..., unsafe_allow_html=True)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CSS = """
 <style>
-    .stApp { background-color: #0D1117; color: #E6EDF3; }
-    .stTextInput > div > div > input {
-        background-color: #161B22;
-        color: #E6EDF3;
-        border: 1px solid #00E676;
-        border-radius: 8px;
-    }
-    .stSelectbox > div > div {
-        background-color: #161B22;
-        color: #E6EDF3;
-        border: 1px solid #30363D;
-    }
-    .metric-card {
-        background-color: #161B22;
-        border: 1px solid #21262D;
-        border-radius: 10px;
-        padding: 16px;
-        text-align: center;
-    }
-    .metric-value { font-size: 2rem; font-weight: bold; color: #00E676; }
-    .metric-label { font-size: 0.85rem; color: #8B949E; }
-    .stDataFrame { background-color: #161B22; }
-    div[data-testid="stMetricValue"] { color: #00E676; }
-    .stButton > button {
-        background-color: #00E676;
-        color: #0D1117;
-        font-weight: bold;
-        border: none;
-        border-radius: 8px;
-    }
-    h1, h2, h3 { color: #E6EDF3; }
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600&display=swap');
+
+:root {
+  --bg:      #000005;
+  --accent:  #00b4ff;
+  --accent2: #bf00ff;
+  --accent3: #6e00ff;
+  --text:    #c8d8ff;
+  --muted:   #3a3a5c;
+}
+
+/* ── hide streamlit chrome ── */
+#MainMenu, footer, header { visibility: hidden; }
+.block-container { padding: 0 !important; max-width: 100% !important; }
+
+html, body, [data-testid="stAppViewContainer"] {
+  background: var(--bg) !important;
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── scanline overlay ── */
+[data-testid="stAppViewContainer"]::before {
+  content: "";
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent, transparent 3px,
+    rgba(0,180,255,.018) 3px,
+    rgba(0,180,255,.018) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ── wrapper ── */
+.mv-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── ambient radial glow ── */
+.mv-wrapper::after {
+  content: "";
+  position: fixed;
+  width: 700px; height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(110,0,255,.12) 0%,
+    rgba(0,180,255,.06) 35%,
+    transparent 70%
+  );
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: ambient-pulse 7s ease-in-out infinite;
+}
+
+@keyframes ambient-pulse {
+  0%,100% { opacity:.7; transform: translate(-50%,-50%) scale(1);    }
+  50%      { opacity:1;  transform: translate(-50%,-50%) scale(1.18); }
+}
+
+/* ── eyebrow ── */
+.mv-eyebrow {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: .4em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 48px;
+  animation: fade-down .8s ease both;
+}
+
+/* ── logo ring ── */
+.mv-logo-wrap {
+  position: relative;
+  width: 320px; height: 320px;
+  display: flex; align-items: center; justify-content: center;
+  animation: fade-up 1s ease .2s both;
+}
+
+.mv-logo-wrap::before {
+  content: "";
+  position: absolute; inset: -18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,180,255,.25);
+  border-top-color: rgba(0,180,255,.8);
+  border-right-color: rgba(191,0,255,.5);
+  animation: spin 10s linear infinite;
+}
+
+.mv-logo-wrap::after {
+  content: "";
+  position: absolute; inset: -32px;
+  border-radius: 50%;
+  border: 1px dashed rgba(191,0,255,.2);
+  border-bottom-color: rgba(191,0,255,.6);
+  animation: spin 16s linear infinite reverse;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── orbits ── */
+.mv-orbit  {
+  position: absolute; inset: -18px; border-radius: 50%;
+  animation: spin 10s linear infinite; pointer-events: none;
+}
+.mv-orbit-dot {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent), 0 0 28px var(--accent);
+}
+
+.mv-orbit2 {
+  position: absolute; inset: -32px; border-radius: 50%;
+  animation: spin 16s linear infinite reverse; pointer-events: none;
+}
+.mv-orbit-dot2 {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent2);
+  box-shadow: 0 0 10px var(--accent2), 0 0 22px var(--accent2);
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   LOGO IMAGE — renderiza a imagem embutida em Base64
+   src="data:{mime};base64,{string}" vem do Estrutura 2
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.mv-logo {
+  width: 300px; height: 300px;
+  object-fit: cover;
+  border-radius: 50%;
+  animation: venom-float 6s ease-in-out infinite,
+             venom-glow  4s ease-in-out infinite;
+}
+
+@keyframes venom-float {
+  0%,100% { transform: translateY(0px)   scale(1);    }
+  30%      { transform: translateY(-14px) scale(1.02); }
+  60%      { transform: translateY(-7px)  scale(.99);  }
+}
+
+@keyframes venom-glow {
+  0%,100% {
+    filter: drop-shadow(0 0 20px rgba(0,180,255,.5))
+            drop-shadow(0 0 6px  rgba(191,0,255,.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 45px rgba(0,180,255,.9))
+            drop-shadow(0 0 20px rgba(191,0,255,.6))
+            drop-shadow(0 0 60px rgba(110,0,255,.35));
+  }
+}
+
+/* ── title ── */
+.mv-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 8vw, 5.5rem);
+  letter-spacing: .08em;
+  line-height: 1;
+  text-align: center;
+  margin-top: 48px;
+  background: linear-gradient(135deg, var(--accent) 0%, #ffffff 40%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fade-up 1s ease .4s both, flicker 8s step-end infinite 2s;
+}
+
+@keyframes flicker {
+  0%,96%,100% { opacity:1;  }
+  97%          { opacity:.7; }
+  98%          { opacity:1;  }
+  99%          { opacity:.4; }
+}
+
+/* ── subtitle ── */
+.mv-sub {
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: .08em;
+  color: var(--muted);
+  text-align: center;
+  max-width: 380px;
+  line-height: 1.8;
+  margin-top: 14px;
+  animation: fade-up 1s ease .6s both;
+}
+
+/* ── pills ── */
+.mv-pills {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 36px;
+  animation: fade-up 1s ease .8s both;
+}
+
+.mv-pill {
+  padding: 5px 18px; border-radius: 4px;
+  font-size: 10px; letter-spacing: .18em;
+  text-transform: uppercase; font-weight: 600;
+  border: 1px solid rgba(0,180,255,.2);
+  color: rgba(0,180,255,.6);
+  background: rgba(0,180,255,.04);
+  transition: all .3s ease;
+  position: relative; overflow: hidden;
+}
+
+.mv-pill::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(0,180,255,.08), transparent);
+  transform: translateX(-100%);
+  transition: transform .5s ease;
+}
+
+.mv-pill:hover::before { transform: translateX(100%); }
+.mv-pill:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 14px rgba(0,180,255,.2);
+  cursor: default;
+}
+
+/* ── drip bar ── */
+.mv-drip {
+  width: 2px; height: 70px;
+  background: linear-gradient(to bottom, var(--accent), var(--accent2), transparent);
+  margin-top: 44px; border-radius: 2px;
+  box-shadow: 0 0 8px var(--accent);
+  animation: fade-up 1s ease 1s both, drip-pulse 3s ease-in-out infinite 1s;
+}
+
+@keyframes drip-pulse {
+  0%,100% { opacity:.5; height:70px; }
+  50%      { opacity:1;  height:90px;
+             box-shadow: 0 0 16px var(--accent), 0 0 30px var(--accent2); }
+}
+
+/* ── shared keyframes ── */
+@keyframes fade-up {
+  from { opacity:0; transform: translateY(28px); }
+  to   { opacity:1; transform: translateY(0);    }
+}
+@keyframes fade-down {
+  from { opacity:0; transform: translateY(-18px); }
+  to   { opacity:1; transform: translateY(0);      }
+}
 </style>
-""", unsafe_allow_html=True)
+"""
 
-# --- Load Data ---
-URL = "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv"
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  ESTRUTURA 1 · HTML RENDER
+#  A imagem é injetada como Data URI (Estrutura 2):
+#  src="data:{logo_mime};base64,{logo_b64}"
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HTML = f"""
+<div class="mv-wrapper">
 
-@st.cache_data(ttl=3600)
-def load_data():
-    try:
-        df = pd.read_csv(URL)
-    except:
-        # fallback to local file
-        df = pd.read_csv("sp500-table/sp500-table.csv")
-    return df
+  <p class="mv-eyebrow">⬡ &nbsp; sistema · ativo &nbsp; ⬡</p>
 
-# --- Search functions ---
-def search_company(df, query):
-    return df[df["Security"].str.lower().str.contains(query.lower(), na=False)]
+  <!-- Logo com Base64 embutido — Estrutura 2 -->
+  <div class="mv-logo-wrap">
+    <div class="mv-orbit"><div class="mv-orbit-dot"></div></div>
+    <div class="mv-orbit2"><div class="mv-orbit-dot2"></div></div>
+    <img
+      class="mv-logo"
+      src="data:{logo_mime};base64,{logo_b64}"
+      alt="Venom Logo"
+    />
+  </div>
 
-def search_ticker(df, ticker):
-    return df[df["Symbol"] == ticker.upper()]
+  <h1 class="mv-title">Imagem em<br>Movimento</h1>
 
-def search_sector(df, sector):
-    if sector == "All":
-        return df
-    return df[df["GICS Sector"] == sector]
+  <p class="mv-sub">
+    CSS Injection &nbsp;·&nbsp; HTML Render &nbsp;·&nbsp; Streamlit<br>
+    Energia simbiótica · Sempre em movimento.
+  </p>
 
-def sort_alphabetically(df):
-    return df.sort_values(by="Security")
+  <div class="mv-pills">
+    <div class="mv-pill">Streamlit</div>
+    <div class="mv-pill">CSS Injection</div>
+    <div class="mv-pill">Base64 Img</div>
+    <div class="mv-pill">Neon FX</div>
+  </div>
 
-# --- Header ---
-st.markdown("## 📈 S&P 500 Search Tool")
-st.markdown("Pesquisa empresas do índice S&P 500 por nome, ticker ou setor.")
-st.divider()
+  <div class="mv-drip"></div>
 
-# --- Load ---
-with st.spinner("A carregar dados..."):
-    df = load_data()
+</div>
+"""
 
-# --- Metrics ---
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric("Total Empresas", len(df))
-with col2:
-    st.metric("Setores", df["GICS Sector"].nunique())
-with col3:
-    st.metric("Última atualização", "Auto (GitHub)")
-
-st.divider()
-
-# --- Search UI ---
-col_a, col_b, col_c = st.columns([2, 1, 2])
-
-with col_a:
-    name_query = st.text_input("🔍 Pesquisar por nome", placeholder="ex: Apple, Microsoft...")
-
-with col_b:
-    ticker_query = st.text_input("🏷️ Pesquisar por ticker", placeholder="ex: AAPL")
-
-with col_c:
-    sectors = ["All"] + sorted(df["GICS Sector"].dropna().unique().tolist())
-    sector_query = st.selectbox("🏭 Filtrar por setor", sectors)
-
-col_d, col_e = st.columns([1, 4])
-with col_d:
-    sort_alpha = st.checkbox("Ordenar A-Z")
-
-# --- Filter logic ---
-result = df.copy()
-
-if name_query:
-    result = search_company(result, name_query)
-
-if ticker_query:
-    result = search_ticker(result, ticker_query)
-
-if sector_query != "All":
-    result = search_sector(result, sector_query)
-
-if sort_alpha:
-    result = sort_alphabetically(result)
-
-# --- Results ---
-st.divider()
-st.markdown(f"### Resultados: **{len(result)}** empresas encontradas")
-
-if len(result) == 0:
-    st.warning("Nenhuma empresa encontrada. Tenta outro critério de pesquisa.")
-else:
-    st.dataframe(
-        result.reset_index(drop=True),
-        use_container_width=True,
-        height=500
-    )
-
-    # Download button
-    csv = result.to_csv(index=False).encode("utf-8")
-    st.download_button(
-        label="⬇️ Download resultados CSV",
-        data=csv,
-        file_name="sp500_search_results.csv",
-        mime="text/csv"
-    )
-
-# --- Footer ---
-st.divider()
-st.markdown("<p style='text-align:center; color:#8B949E; font-size:0.8rem;'>Dados: GitHub datasets/s-and-p-500-companies • Atualizado automaticamente</p>", unsafe_allow_html=True)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  RENDER FINAL
+#  1. CSS injetado no DOM via st.markdown (unsafe_allow_html=True)
+#  2. HTML renderizado com imagem Base64 embutida
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+st.markdown(CSS,  unsafe_allow_html=True)
+st.markdown(HTML, unsafe_allow_html=True)
